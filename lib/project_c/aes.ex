@@ -3,6 +3,13 @@ defmodule ProjectC.Aes do
     Learning to use AES in Erlang
   """
 
+  # in Ruby OpenSSL cipher.key_len returns 32 by default
+  @key_length 32
+  # OpenSSL::Cipher::AES.new(256, :GCM).iv_len return 12 in Ruby
+  @iv_byte_size 12
+  # like in Cryppo
+  @auth_tag_length 16
+
   def ciphers, do: :crypto.supports(:ciphers)
 
   #   [:chacha20, :blowfish_ecb, :blowfish_ofb64, :blowfish_cfb64, :blowfish_cbc,
@@ -14,8 +21,7 @@ defmodule ProjectC.Aes do
   #  :aes_128_ctr, :aes_192_ctr, :aes_256_ctr, :aes_ige256]
 
   def with_apoc(clear_text) do
-    # in Ruby OpenSSL cipher.key_len returns 32 by default
-    key = Apoc.rand_bytes(32)
+    key = Apoc.rand_bytes(@key_length)
 
     # Ruby cipher.iv_len #=> 16
     # @iv_byte_size is 16
@@ -26,30 +32,95 @@ defmodule ProjectC.Aes do
     decrypted
   end
 
-  @iv_byte_size 16
+  def with_erlang_crypto_legacy_api(clear_text) do
+    key = :crypto.strong_rand_bytes(@key_length)
 
-  def with_erlang_crypto_legacy_way(clear_text) do
-    key = :crypto.strong_rand_bytes(32)
-
-    IO.puts("key:")
-    key |> IO.inspect()
-    key |> byte_size() |> IO.puts()
+    # IO.puts("key:")
+    # key |> IO.inspect()
+    # key |> byte_size() |> IO.puts()
 
     iv = :crypto.strong_rand_bytes(@iv_byte_size)
-    IO.puts("iv:")
-    iv |> IO.inspect()
-    iv |> byte_size() |> IO.puts()
+
+    # IO.puts("iv:")
+    # iv |> IO.inspect()
+    # iv |> byte_size() |> IO.puts()
 
     {encoded, tag} = :crypto.block_encrypt(:aes_gcm, key, iv, {"AES256GCM", clear_text})
 
-    IO.puts("tag:")
-    tag |> IO.inspect()
-    tag |> byte_size() |> IO.puts()
+    # IO.puts("tag:")
+    # tag |> IO.inspect()
+    # tag |> byte_size() |> IO.puts()
 
-    IO.puts("encoded:")
-    encoded |> IO.inspect()
-    encoded |> byte_size() |> IO.puts()
+    # IO.puts("encoded:")
+    # encoded |> IO.inspect()
+    # encoded |> byte_size() |> IO.puts()
 
     :crypto.block_decrypt(:aes_gcm, key, iv, {"AES256GCM", encoded, tag}) |> IO.inspect()
+  end
+
+  def with_erlang_crypto_new_api_aes_128_ctr(clear_text1, clear_text2) do
+    # key = :crypto.strong_rand_bytes(@key_length)
+    key = :crypto.strong_rand_bytes(16)
+
+    # iv = :crypto.strong_rand_bytes(@iv_byte_size)
+    iv = :crypto.strong_rand_bytes(16)
+
+    # For encryption, set the EncryptFlag to true. For decryption, set it to false.
+    # state_enc = :crypto.crypto_init(:aes_256_gcm, key, iv, true)
+    state_enc = :crypto.crypto_init(:aes_128_ctr, key, iv, true)
+
+    chunk1 = :crypto.crypto_update(state_enc, clear_text1)
+    chunk2 = :crypto.crypto_update(state_enc, clear_text2)
+
+    state_dec = :crypto.crypto_init(:aes_128_ctr, key, iv, false)
+
+    decoded1 = :crypto.crypto_update(state_dec, chunk1) |> IO.inspect()
+    decoded2 = :crypto.crypto_update(state_dec, chunk2) |> IO.inspect()
+    decoded1 <> decoded2
+  end
+
+  def with_erlang_crypto_new_api(clear_text) do
+    key = :crypto.strong_rand_bytes(@key_length)
+    iv = :crypto.strong_rand_bytes(@iv_byte_size)
+
+    # like in Cryppo
+    additional_authenticated_data = "none"
+
+    # For encryption, set the EncryptFlag to true. For decryption, set it to false.
+    {encrypted, auth_tag} =
+      :crypto.crypto_one_time_aead(
+        # Cipher
+        :aes_256_gcm,
+        # Key
+        key,
+        # IV
+        iv,
+        # InText
+        clear_text,
+        # AAD
+        additional_authenticated_data,
+        # TagOrTagLength
+        @auth_tag_length,
+        true
+      )
+
+    # encrypted |> IO.inspect()
+    # auth_tag |> IO.inspect()
+
+    :crypto.crypto_one_time_aead(
+      # Cipher
+      :aes_256_gcm,
+      # Key
+      key,
+      # IV
+      iv,
+      # InText
+      encrypted,
+      # AAD
+      additional_authenticated_data,
+      # TagOrTagLength
+      auth_tag,
+      false
+    )
   end
 end
