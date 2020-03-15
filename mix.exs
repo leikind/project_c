@@ -7,8 +7,7 @@ defmodule ProjectC.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      erlc_paths: ["lib"]
+      deps: deps()
     ]
   end
 
@@ -20,7 +19,8 @@ defmodule ProjectC.MixProject do
 
   defp deps do
     [
-      {:credo, "~> 1.1.0", only: :dev}
+      {:credo, "~> 1.1.0", only: :dev},
+      {:pbkdf2, "~> 2.0"}
     ]
   end
 end
