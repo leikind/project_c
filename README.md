@@ -14,7 +14,4 @@ Learning cryptography in Erlang
   * create keys
   * encrypt
   * decrypt
-
-## TO DO
-
 * Derive keys with PBKDF2 HMAC to use with AES 256 GCM
