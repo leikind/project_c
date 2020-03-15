@@ -20,8 +20,6 @@ defmodule ProjectC.MixProject do
 
   defp deps do
     [
-      {:ex_crypto, "~> 0.10.0"},
-      {:apoc, "~> 0.2.0"},
       {:credo, "~> 1.1.0", only: :dev}
     ]
   end

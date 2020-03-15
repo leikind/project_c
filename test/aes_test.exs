@@ -3,10 +3,6 @@ defmodule AesTest do
 
   alias ProjectC.Aes
 
-  test "with_apoc" do
-    assert Aes.with_apoc("this is love") == "this is love"
-  end
-
   test "with_erlang_crypto_legacy_api" do
     assert Aes.with_erlang_crypto_legacy_api("teen spirit") == "teen spirit"
   end

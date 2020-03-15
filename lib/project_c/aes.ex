@@ -20,18 +20,6 @@ defmodule ProjectC.Aes do
   #  :aes_256_gcm, :aes_192_gcm, :aes_128_gcm, :des_cfb, :des_cbc, :rc4,
   #  :aes_128_ctr, :aes_192_ctr, :aes_256_ctr, :aes_ige256]
 
-  def with_apoc(clear_text) do
-    key = Apoc.rand_bytes(@key_length)
-
-    # Ruby cipher.iv_len #=> 16
-    # @iv_byte_size is 16
-
-    payload = Apoc.AES.encrypt(clear_text, key)
-
-    {:ok, decrypted} = Apoc.AES.decrypt(payload, key)
-    decrypted
-  end
-
   def with_erlang_crypto_legacy_api(clear_text) do
     key = :crypto.strong_rand_bytes(@key_length)
 
